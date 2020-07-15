@@ -4,18 +4,13 @@ K3S is the lightweight Kubernetes distribution by Rancher: rancher/k3s
 
 K3D creates containerized k3S clusters. This means, that you can spin up a multi-node k3s cluster on a single machine using docker.
 
-### Setup Private Registry
+### Prerequisite
 
-- Install 
-
-
-
-### Setup K3D
 Following setup on CentOS 7, for other OS need to change some command. 
 
 - Install tools 
 
-```yum install -y git curl wget bind-utils jq httpd-tools zip unzip nfs-utils go dos2unix telnet```
+```yum install -y git curl wget bind-utils jq httpd-tools zip unzip nfs-utils go dos2unix telnet ```
   
 - Install Docker 
 ``` 
@@ -53,6 +48,49 @@ kubectl krew install ns
 
 echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> /root/.bash_profile
 ```
+
+### Setup Private Registry
+
+- Create data & auth directory 
+
+Create data & auth directory inside the docker-registry directory to use as docker volume. 
+This directory will be used to store docker registry data including docker images & authentication.
+
+```
+mkdir -p ~/cctech-registry/data
+mkdir -p ~/cctech-registry/auth
+```
+
+- Create authentication
+
+```htpasswd -bBn cloudcafe cloudcafe12345 > ~/cctech-registry/auth/htpasswd```
+
+- Install
+
+```docker run -dit --auto-restart -p 5000:5000 --name registry registry```
+
+- Add Insecure Registry to Docker, to access private registry.
+
+As default docker uses https to connect to docker registry and we are not using any secure method, so we need to add our insecure registry. 
+Follow below steps to add Insecure Registry to Docker. 
+
+```
+cat > /etc/docker/daemon.json << EOF
+{
+"insecure-registries" : ["<Registry Server IP>:5000"]
+}
+EOF
+```
+
+Then restart Docker.
+
+```systemctl restart docker```
+
+- Test
+
+Just push
+
+### Setup K3D
 
 - Install K3D (Light weight Kubernetes on Docker)
 
