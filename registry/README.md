@@ -51,23 +51,32 @@ echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> /root/.bash_profile
 
 ### Setup Private Registry
 
-- Create data & auth directory 
+- Create data, auth directory & give proper permissions.
 
 Create data & auth directory inside the docker-registry directory to use as docker volume. 
 This directory will be used to store docker registry data including docker images & authentication.
 
 ```
-mkdir -p ~/cctech-registry/data
-mkdir -p ~/cctech-registry/auth
+mkdir -p $HOME/cctech-registry/data
+mkdir -p $HOME/cctech-registry/auth
+chcon -Rt svirt_sandbox_file_t $HOME/cctech-registry
 ```
 
 - Create authentication
 
-```htpasswd -bBn cloudcafe cloudcafe12345 > ~/cctech-registry/auth/htpasswd```
+```htpasswd -bBn cloudcafetech cloudcafetech12345 > ~/cctech-registry/auth/htpasswd```
 
 - Install
 
-```docker run -dit --auto-restart -p 5000:5000 --name registry registry```
+```
+docker run -d --name registry --restart=always \
+-e REGISTRY_AUTH=htpasswd \
+-e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
+-e REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm \
+-v $HOME/cctech-registry/data:/var/lib/registry \
+-v $HOME/cctech-registry/auth:/auth \
+-p 5000:5000 registry
+```
 
 - Add Insecure Registry to Docker, to access private registry.
 
