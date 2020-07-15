@@ -59,11 +59,14 @@ Create a file privateregistry.yaml then run following command.
 ```
 HOSTIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
 
-ENVIRONMENT=prod
-k3d create --name $ENVIRONMENT --api-port $HOSTIP:6551 --publish 8081:80   # dev
-k3d create --name $ENVIRONMENT --auto-restart --api-port $HOSTIP:6552 --publish 8082:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # test
-k3d create --name $ENVIRONMENT --auto-restart --api-port $HOSTIP:6553 --publish 8083:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # stag
-k3d create --name $ENVIRONMENT --auto-restart --api-port $HOSTIP:6554 --publish 8084:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 2   # prod
+ENVDEV=dev
+ENVTST=test
+ENVSTG=stage
+ENVPRD=prod
+k3d create --name $ENVDEV --auto-restart--api-port $HOSTIP:6551 --publish 8081:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml  # dev
+k3d create --name $ENVTST --auto-restart --api-port $HOSTIP:6552 --publish 8082:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # test
+k3d create --name $ENVSTG --auto-restart --api-port $HOSTIP:6553 --publish 8083:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # stag
+k3d create --name $ENVPRD --auto-restart --api-port $HOSTIP:6554 --publish 8084:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 2   # prod
 
 echo "export KUBECONFIG=\"$(k3d get-kubeconfig --name='prod')\"" >> $HOME/.bash_profile
 echo "alias oc=/usr/bin/kubectl" >> /root/.bash_profile
@@ -77,3 +80,19 @@ export KUBECONFIG=<path of 1st kube-config-file>:<path of 2nd kube-config-file>
 kubectl config view --raw > merge-config
 export KUBECONFIG=<PATH OF merge-config FILE>
 ```
+
+### Setup Metric Server
+
+```kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.3.6/components.yaml```
+
+#### CTOP (Container TOP)
+
+Top-like Interface for Monitoring Docker Containers
+
+```
+export VER="0.7.3"
+wget https://github.com/bcicen/ctop/releases/download/v${VER}/ctop-${VER}-linux-amd64 -O ctop
+chmod +x ctop
+sudo mv ctop /usr/local/bin/ctop
+```
+
