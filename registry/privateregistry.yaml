@@ -1,0 +1,9 @@
+mirrors:
+  10.128.0.26:9000:
+    endpoint:
+      - http://10.128.0.26:9000
+configs:
+  10.128.0.26:9000:
+    auth:
+      username: prasen
+      password: Prasen12345
