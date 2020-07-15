@@ -4,7 +4,13 @@ K3S is the lightweight Kubernetes distribution by Rancher: rancher/k3s
 
 K3D creates containerized k3S clusters. This means, that you can spin up a multi-node k3s cluster on a single machine using docker.
 
-### Setup
+### Setup Private Registry
+
+- Install 
+
+
+
+### Setup K3D
 Following setup on CentOS 7, for other OS need to change some command. 
 
 - Install tools 
