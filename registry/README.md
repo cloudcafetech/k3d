@@ -70,9 +70,9 @@ chcon -Rt svirt_sandbox_file_t $HOME/cctech-registry
 
 ```
 docker run -d --name registry --restart=always \
--e REGISTRY_AUTH=htpasswd \
--e REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd \
--e REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
 -v $HOME/cctech-registry/data:/var/lib/registry \
 -v $HOME/cctech-registry/auth:/auth \
 -p 5000:5000 registry
