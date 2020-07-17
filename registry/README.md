@@ -64,7 +64,7 @@ chcon -Rt svirt_sandbox_file_t $HOME/cctech-registry
 
 - Create authentication
 
-```htpasswd -bBn cloudcafetech cloudcafetech12345 > $HOME/cctech-registry/auth/htpasswd```
+```htpasswd -bBn cloudcafetech cloudcafetech12345 > ~/cctech-registry/auth/htpasswd```
 
 - Install
 
@@ -148,4 +148,3 @@ wget https://github.com/bcicen/ctop/releases/download/v${VER}/ctop-${VER}-linux-
 chmod +x ctop
 sudo mv ctop /usr/local/bin/ctop
 ```
-
