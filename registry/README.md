@@ -64,7 +64,10 @@ chcon -Rt svirt_sandbox_file_t $HOME/cctech-registry
 
 - Create authentication
 
-```htpasswd -bBn cloudcafetech cloudcafetech12345 > $HOME/cctech-registry/auth/htpasswd```
+```
+htpasswd -bBn cloudcafetech cloudcafetech12345 > $HOME/cctech-registry/auth/htpasswd
+htpasswd -b admin admin12345 > $HOME/cctech-registry/auth/htpasswd
+```
 
 - Install
 
@@ -84,6 +87,8 @@ As default docker uses https to connect to docker registry and we are not using 
 Follow below steps to add Insecure Registry to Docker. 
 
 ```
+HIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
+
 cat > /etc/docker/daemon.json << EOF
 {
 "insecure-registries" : ["<Registry Server IP>:5000"]
@@ -97,7 +102,15 @@ Then restart Docker.
 
 - Test
 
-Just push
+```
+HIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
+
+docker login -u cloudcafetech -p cloudcafetech12345 $HIP:5000
+
+docker pull ubuntu
+docker tag ubuntu $HIP:5000/ubuntu
+docker push $HIP:5000/ubuntu
+```
 
 ### Setup K3D
 
