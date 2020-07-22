@@ -116,7 +116,7 @@ docker push $HIP:5000/ubuntu
 
 - Install K3D (Light weight Kubernetes on Docker)
 
-```wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.7.0 bash```
+```wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash```
 
 - Create Cluster with Private Registry
 
