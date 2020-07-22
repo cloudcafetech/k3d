@@ -1,0 +1,87 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: webmem-svc
+  labels:
+    app: webmem
+spec:
+  type: NodePort
+  ports:
+  - port: 8088
+    targetPort: 3000
+    name: http
+    nodePort: 30088
+  selector:
+    app: webmem
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webmem
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webmem
+  template:
+    metadata:
+      labels:
+        app: webmem
+    spec:
+      containers:
+      - name: webmem-helloworld
+        image: cloudcafe/sampleapp:v1
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_UID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.uid
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        readinessProbe:
+          httpGet:
+            path: /api/version
+            port: 3000
+        livenessProbe:
+          httpGet:
+            path: /api/healthy
+            port: 3000
+        resources:
+          requests:
+            cpu: 200m
+            memory: 300Mi
+          limits:
+            cpu: 200m
+            memory: 300Mi
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    app: webmem
+  name: webmem
+spec:
+  rules:
+    - host: webmem.apps.cloud-cafe.tk
+      http:
+        paths:
+          - backend:
+              serviceName: webmem-svc
+              servicePort: 8088
