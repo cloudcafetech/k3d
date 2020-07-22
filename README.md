@@ -48,7 +48,7 @@ echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> /root/.bash_profile
 
 - Install K3D (Light weight Kubernetes on Docker)
 
-```wget -q -O - https://raw.githubusercontent.com/rancher/k3d/master/install.sh | TAG=v1.7.0 bash```
+```wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash```
 
 - Create Cluster
 ```
