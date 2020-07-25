@@ -1,0 +1,121 @@
+#Prerequisite#
+
+Install tools:
+
+yum install -y git curl wget bind-utils jq httpd-tools zip unzip nfs-utils go dos2unix telnet
+
+Install Docker:
+
+curl https://releases.rancher.com/install-docker/18.09.sh | sh
+systemctl enable docker
+
+Install Docker Compose:
+
+sudo curl -L "https://github.com/docker/compose/releases/download/1.26.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+
+Install kubectl:
+
+K8S_VER=v1.17.6
+wget https://storage.googleapis.com/kubernetes-release/release/$K8S_VER/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+mv ./kubectl /usr/bin/kubectl
+
+Install kubectl plugins using krew:
+
+set -x; cd "$(mktemp -d)" &&
+  curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/krew.{tar.gz,yaml}" &&
+  tar zxvf krew.tar.gz &&
+  KREW=./krew-"$(uname | tr '[:upper:]' '[:lower:]')_amd64" &&
+  "$KREW" install --manifest=krew.yaml --archive=krew.tar.gz &&
+  "$KREW" update
+  
+export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+kubectl krew install ctx
+kubectl krew install ns
+echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> /root/.bash_profile
+
+---------------------------------------------------------------------
+#Setup Private Registry#
+
+Create data, auth directory & give proper permissions:
+
+mkdir -p $HOME/cctech-registry/data
+mkdir -p $HOME/cctech-registry/auth
+chcon -Rt svirt_sandbox_file_t $HOME/cctech-registry
+
+Create authentication:
+
+htpasswd -bBn cloudcafetech cloudcafetech12345 > $HOME/cctech-registry/auth/htpasswd
+htpasswd -b admin admin12345 > $HOME/cctech-registry/auth/htpasswd
+
+Add Insecure Registry to Docker, to access private registry:
+
+HIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
+cat > /etc/docker/daemon.json << EOF
+{
+"insecure-registries" : ["<Registry Server IP>:5000"]
+}
+EOF
+systemctl restart docker
+
+Install:
+
+docker run -d --name registry --restart=always \
+-e "REGISTRY_AUTH=htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd" \
+-e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" \
+-v $HOME/cctech-registry/data:/var/lib/registry \
+-v $HOME/cctech-registry/auth:/auth \
+-p 5000:5000 registry
+
+Test:
+
+docker login -u cloudcafetech -p cloudcafetech12345 $HIP:5000
+docker pull ubuntu
+docker tag ubuntu $HIP:5000/ubuntu
+docker push $HIP:5000/ubuntu
+
+---
+Setup K3D with private registry:
+
+wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash
+
+
+cat > privateregistry.yaml << EOF
+mirrors:
+  <Registry Server IP>:5000:
+    endpoint:
+      - http://<Registry Server IP>:5000
+configs:
+  <Registry Server IP>:5000:
+    auth:
+      username: cloudcafetech
+      password: cloudcafetech12345
+EOF
+
+HOSTIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
+ENVDEV=dev
+ENVTST=test
+
+k3d create --name $ENVDEV --auto-restart --api-port $HOSTIP:6551 --publish 8081:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml  # dev
+k3d create --name $ENVTST --auto-restart --api-port $HOSTIP:6552 --publish 8082:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # test
+
+Access multiple cluster:
+
+k3d get-kubeconfig --name='dev'
+k3d get-kubeconfig --name='tesr'
+export KUBECONFIG=/root/.config/k3d/test/kubeconfig.yaml:/root/.config/k3d/dev/kubeconfig.yaml
+kubectl config view --raw > merge-config
+export KUBECONFIG=$HOME/merge-config
+echo "export KUBECONFIG=$HOME/merge-config" >> $HOME/.bash_profile
+
+echo "alias oc=/usr/bin/kubectl" >> /root/.bash_profile
+
+kubectl ctx <Cluster Name>
+kubectl ctx test
+kubectl ns
+
+wget https://raw.githubusercontent.com/cloudcafetech/k3d/master/registry/sampleapp.yaml
+
+kubectl create -f sampleapp.yaml
