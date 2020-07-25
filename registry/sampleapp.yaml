@@ -5,15 +5,12 @@ metadata:
   labels:
     app: webmem
 spec:
-  type: NodePort
   ports:
   - port: 8088
     targetPort: 3000
     name: http
-    nodePort: 30088
   selector:
     app: webmem
-  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -74,14 +71,14 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  labels:
-    app: webmem
   name: webmem
+  annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-    - host: webmem.apps.cloud-cafe.tk
-      http:
-        paths:
-          - backend:
-              serviceName: webmem-svc
-              servicePort: 8088
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: webmem-svc
+          servicePort: 8088
