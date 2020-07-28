@@ -129,7 +129,7 @@ ENVDEV=dev
 ENVTST=test
 ENVSTG=stage
 ENVPRD=prod
-k3d create --name $ENVDEV --auto-restart--api-port $HOSTIP:6551 --publish 8081:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml  # dev
+k3d create --name $ENVDEV --auto-restart --api-port $HOSTIP:6551 --publish 8081:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml  # dev
 k3d create --name $ENVTST --auto-restart --api-port $HOSTIP:6552 --publish 8082:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # test
 k3d create --name $ENVSTG --auto-restart --api-port $HOSTIP:6553 --publish 8083:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 1   # stag
 k3d create --name $ENVPRD --auto-restart --api-port $HOSTIP:6554 --publish 8084:80 -v $HOME/privateregistry.yaml:/etc/rancher/k3s/registries.yaml --workers 2   # prod
