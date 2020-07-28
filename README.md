@@ -50,7 +50,7 @@ echo 'export PATH="${PATH}:${HOME}/.krew/bin"' >> /root/.bash_profile
 
 ```wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v1.7.0 bash```
 
-- Create Cluster
+- Create Cluster (Old Version v1.7.0)
 ```
 HOSTIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
 
@@ -64,6 +64,37 @@ k3d create --name $ENVSTG --auto-restart --api-port $HOSTIP:6553 --publish 8083:
 k3d create --name $ENVPRD --auto-restart --api-port $HOSTIP:6554 --publish 8084:80 --workers 2   # prod
 
 echo "export KUBECONFIG=\"$(k3d get-kubeconfig --name='prod')\"" >> $HOME/.bash_profile
+echo "alias oc=/usr/bin/kubectl" >> /root/.bash_profile
+
+kubectl get nodes
+```
+
+- Create Cluster (New Version v3.0)
+
+```
+wget -q -O - https://raw.githubusercontent.com/rancher/k3d/main/install.sh | TAG=v3.0.0 bash
+
+HOSTIP=`ip -o -4 addr list eth0 | awk '{print $4}' | cut -d/ -f1`
+
+ENVDEV=dev
+ENVTST=test
+ENVSTG=stage
+ENVPRD=prod
+k3d cluster create $ENVDEV --api-port $HOSTIP:6551 -p 8081:80@loadbalancer  # dev
+k3d cluster create $ENVTST --api-port $HOSTIP:6552 -p 8082:80@loadbalancer -a 1   # test
+k3d cluster create $ENVSTG --api-port $HOSTIP:6553 -p 8083:80@loadbalancer -a 1   # stage
+k3d cluster create $ENVPRD --api-port $HOSTIP:6554 -p 8084:80@loadbalancer -a 2   # prod
+
+k3d kubeconfig get $ENVDEV >$ENVDEV-kubeconfig.yaml
+k3d kubeconfig get $ENVTST >$ENVTST-kubeconfig.yaml
+k3d kubeconfig get $ENVSTG >$ENVSTG-kubeconfig.yaml
+k3d kubeconfig get $ENVPRD >$ENVPRD-kubeconfig.yaml
+
+export KUBECONFIG=$HOME/$ENVDEV-kubeconfig.yaml:$HOME/$ENVTST-kubeconfig.yaml:$HOME/$ENVSTG-kubeconfig.yaml:$HOME/$ENVPRD-kubeconfig.yaml
+kubectl config view --raw > merge-config
+export KUBECONFIG=$HOME/merge-config
+
+echo "export KUBECONFIG=$HOME/merge-config" >> $HOME/.bash_profile
 echo "alias oc=/usr/bin/kubectl" >> /root/.bash_profile
 
 kubectl get nodes
