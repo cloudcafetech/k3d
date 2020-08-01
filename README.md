@@ -23,7 +23,7 @@ chmod +x /usr/local/bin/docker-compose
 
 - Install kubectl
 ```
-K8S_VER=v1.17.6
+K8S_VER=$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)
 wget https://storage.googleapis.com/kubernetes-release/release/$K8S_VER/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 mv ./kubectl /usr/bin/kubectl
